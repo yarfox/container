@@ -183,7 +183,6 @@ class Container implements ContainerInterface
                 if ($param->isDefaultValueAvailable()) {
                     break;
                 }
-
                 return null;
             }
 
@@ -191,9 +190,13 @@ class Container implements ContainerInterface
                 throw new ContainerException("Class {$class} depend on itself!");
             }
 
-
             $instance = $this->getInstance($type->getName());
-            if (!$instance) return null;
+            if (!$instance) {
+                if ($param->isDefaultValueAvailable()) {
+                    break;
+                }
+                return null;
+            }
 
             $constructorParams[] = $instance;
         }
