@@ -109,7 +109,7 @@ class Container implements ContainerInterface
             return $this->instances[$key];
 
         $instance = $this->resolve($key);
-        if (isset($this->singletons[$key]) && $this->singletons[$key]) {
+        if ($instance && isset($this->singletons[$key]) && $this->singletons[$key]) {
             $this->registerInstance($key, $instance);
         }
 
@@ -153,12 +153,7 @@ class Container implements ContainerInterface
             $producer = $instance;
         }
 
-        $instance = $this->getInstance($producer);
-        if (!$instance) {
-            $instance = $this->resolveClass($producer);
-        }
-
-        return $instance;
+        return $this->getInstance($producer);
     }
 
     /**
@@ -184,7 +179,7 @@ class Container implements ContainerInterface
         $params = $constructor->getParameters();
         foreach ($params as $param) {
             $type = $param->getType();
-            if (is_null($type) || !class_exists($type->getName())) {
+            if (is_null($type) || (!class_exists($type->getName()) && !interface_exists($type->getName()))) {
                 if ($param->isDefaultValueAvailable()) {
                     break;
                 }
