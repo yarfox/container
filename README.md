@@ -2,6 +2,12 @@
 
 Another container in PHP.  
 
+## Requirement
+
+```
+php>=8.0
+```
+
 ## Install
 
 ```shell
