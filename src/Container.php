@@ -36,6 +36,29 @@ class Container implements ContainerInterface
     private array $configs;
 
     /**
+     * @var ?static
+     */
+    private static ?self $instance = null;
+
+    /**
+     * Constructor of Container.
+     */
+    private function __construct()
+    {}
+
+    /**
+     * @return static
+     */
+    public static function instance(): static
+    {
+        if (!isset(static::$instance)) {
+            static::$instance = new Container();
+        }
+
+        return static::$instance;
+    }
+
+    /**
      * @param string $key
      * @param mixed $producer
      * @param string $scope
@@ -77,10 +100,10 @@ class Container implements ContainerInterface
 
     /**
      * @param string $key
-     * @return object|null
+     * @return mixed
      * @throws \ReflectionException
      */
-    public function getInstance(string $key): ?object
+    public function getInstance(string $key): mixed
     {
         if (isset($this->instances[$key]))
             return $this->instances[$key];
@@ -95,10 +118,10 @@ class Container implements ContainerInterface
 
     /**
      * @param string $key
-     * @return object|null
+     * @return mixed
      * @throws \ReflectionException
      */
-    public function resolve(string $key): ?object
+    public function resolve(string $key): mixed
     {
         $producer = $this->getProducer($key);
         if (!$producer) {
@@ -140,10 +163,10 @@ class Container implements ContainerInterface
 
     /**
      * @param string $class
-     * @return object|null
+     * @return mixed
      * @throws \ReflectionException
      */
-    public function resolveClass(string $class): ?object
+    public function resolveClass(string $class): mixed
     {
         if (!class_exists($class)) {
             return null;

@@ -11,6 +11,7 @@ namespace Anhoder\Container\Test;
 use Anhoder\Container\Container;
 use Anhoder\Container\Exception\ContainerException;
 use PHPUnit\Framework\TestCase;
+use Anhoder\Container\Facade\Container as ContainerFacade;
 
 abstract class AA {}
 
@@ -42,9 +43,10 @@ class ContainerTest extends TestCase
      */
     public function testRegisterInstance()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerInstance('a', new A());
         $this->assertInstanceOf(A::class, $container->getInstance('a'));
+        $this->assertInstanceOf(A::class, ContainerFacade::getInstance('a'));
     }
 
     /**
@@ -53,13 +55,16 @@ class ContainerTest extends TestCase
      */
     public function testResolve()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerProducer('a', function () {
             return new A();
         });
         $this->assertInstanceOf(A::class, $container->resolve('a'));
         $this->assertInstanceOf(A::class, $container->resolve(A::class));
         $this->assertInstanceOf(C::class, $container->resolve(C::class));
+        $this->assertInstanceOf(A::class, ContainerFacade::resolve('a'));
+        $this->assertInstanceOf(A::class, ContainerFacade::resolve(A::class));
+        $this->assertInstanceOf(C::class, ContainerFacade::resolve(C::class));
         $this->expectException(ContainerException::class);
         $container->resolve(D::class);
     }
@@ -71,7 +76,7 @@ class ContainerTest extends TestCase
      */
     public function testResolveClass()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerInstance(AA::class, $container->resolveClass(AAI::class));
         $this->assertInstanceOf(D::class, $container->resolve(D::class));
     }
@@ -83,7 +88,7 @@ class ContainerTest extends TestCase
      */
     public function testRegisterProducer()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerProducer('a', function () {
             return new A();
         });
@@ -101,7 +106,7 @@ class ContainerTest extends TestCase
      */
     public function testRegisterConfigs()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerConfigs(['a' => 'b']);
         $this->assertEquals('b', $container->getConfig('a'));
         $this->assertEquals(null, $container->getConfig('b'));
@@ -113,7 +118,7 @@ class ContainerTest extends TestCase
      */
     public function testGetProducer()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerProducer(A::class, A::class);
         $container->registerProducer('b_class', fn() => B::class);
         $this->assertEquals(A::class, $container->getProducer(A::class));
@@ -126,7 +131,7 @@ class ContainerTest extends TestCase
      */
     public function testRegisterConfig()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerConfig('a', 'b');
         $this->assertEquals('b', $container->getConfig('a'));
         $this->assertEquals(null, $container->getConfig('b'));
@@ -138,7 +143,7 @@ class ContainerTest extends TestCase
      */
     public function testRegisterSingletonProducer()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerSingletonProducer('b_class', fn() => new B(new A()));
         $this->assertEquals(spl_object_hash($container->getInstance('b_class')), spl_object_hash($container->getInstance('b_class')));
     }
@@ -149,7 +154,7 @@ class ContainerTest extends TestCase
      */
     public function testGetConfigs()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerConfig('a', 'b');
         $this->assertEquals(['a' => 'b'], $container->getConfigs());
     }
@@ -160,7 +165,7 @@ class ContainerTest extends TestCase
      */
     public function testGet()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerProducer('a_class', A::class);
         $this->assertInstanceOf(A::class, $container->get('a_class'));
     }
@@ -171,7 +176,7 @@ class ContainerTest extends TestCase
      */
     public function testHas()
     {
-        $container = new Container();
+        $container = Container::instance();
         $container->registerProducer('a_class', A::class);
         $this->assertTrue($container->has('a_class'));
     }

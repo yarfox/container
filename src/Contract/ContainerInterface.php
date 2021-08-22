@@ -50,21 +50,21 @@ interface ContainerInterface extends PsrContainerInterface
     /**
      * get instance.
      * @param string $key
-     * @return object|null
+     * @return mixed
      */
-    public function getInstance(string $key): ?object;
+    public function getInstance(string $key): mixed;
 
     /**
      * @param string $key
-     * @return object|null
+     * @return mixed
      */
-    public function resolve(string $key): ?object;
+    public function resolve(string $key): mixed;
 
     /**
      * @param string $class
-     * @return object|null
+     * @return mixed
      */
-    public function resolveClass(string $class): ?object;
+    public function resolveClass(string $class): mixed;
 
     /**
      * register configs.
