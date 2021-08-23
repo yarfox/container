@@ -12,6 +12,7 @@ use Anhoder\Container\Constant\Constant;
 use Anhoder\Container\Contract\ContainerInterface;
 use Anhoder\Container\Exception\ContainerException;
 use ReflectionClass;
+use Psr\Container\ContainerInterface as OsrContainerInterface;
 
 class Container implements ContainerInterface
 {
@@ -53,6 +54,8 @@ class Container implements ContainerInterface
     {
         if (!isset(static::$instance)) {
             static::$instance = new Container();
+            static::$instance->registerInstance(ContainerInterface::class, static::$instance);
+            static::$instance->registerInstance(OsrContainerInterface::class, static::$instance);
         }
 
         return static::$instance;
