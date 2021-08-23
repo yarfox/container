@@ -133,8 +133,11 @@ class ContainerTest extends TestCase
     {
         $container = Container::instance();
         $container->registerConfig('a', 'b');
+        //$container->registerConfig('b.c', null);
+        $container->registerConfig('b.c.d', 'e');
         $this->assertEquals('b', $container->getConfig('a'));
-        $this->assertEquals(null, $container->getConfig('b'));
+        $this->assertEquals('e', $container->getConfig('b.c.d'));
+        $this->assertEquals(['c' => ['d' => 'e']], $container->getConfig('b'));
     }
 
     /**

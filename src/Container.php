@@ -34,7 +34,7 @@ class Container implements ContainerInterface
     /**
      * @var array
      */
-    private array $configs;
+    private array $configs = [];
 
     /**
      * @var ?static
@@ -229,7 +229,31 @@ class Container implements ContainerInterface
      */
     public function registerConfig(string $key, mixed $value)
     {
-        $this->configs[$key] = $value;
+        $keys = explode('.', $key);
+        $existsKeys = [];
+        $config = &$this->configs;
+        foreach ($keys as $key) {
+
+            if (!is_array($config)) {
+                $key = implode('.', $existsKeys);
+                throw new ContainerException("Config key({$key}) already exists!");
+            }
+
+            if (array_key_exists($key, $config)) {
+                $existsKeys[] = $key;
+
+                if (is_null($config[$key])) {
+                    $key = implode('.', $existsKeys);
+                    throw new ContainerException("Config key({$key}) already exists!");
+                }
+            } else {
+                $config[$key] = [];
+            }
+
+            $config = &$config[$key];
+        }
+
+        $config = $value;
     }
 
     /**
@@ -239,7 +263,18 @@ class Container implements ContainerInterface
      */
     public function getConfig(string $key, mixed $default = null): mixed
     {
-        return $this->configs[$key] ?? $default;
+        $keys = explode('.', $key);
+        $config = $this->configs;
+
+        foreach ($keys as $key) {
+            if (!isset($config[$key])) {
+                return $default;
+            }
+
+            $config = $config[$key];
+        }
+
+        return $config;
     }
 
     /**
