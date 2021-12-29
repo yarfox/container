@@ -38,7 +38,7 @@ class D {
     {}
 }
 
-$container = new Container();
+$container = Container::instance();
 $container->registerProducer('a', function () {
     return new A();
 });
