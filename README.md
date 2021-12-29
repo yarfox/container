@@ -11,7 +11,7 @@ php>=8.0
 ## Install
 
 ```shell
-composer require anhoder/container
+composer require anhoder/container:1.0.0-alpha
 ```
 
 ## Usage
