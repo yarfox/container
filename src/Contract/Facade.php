@@ -25,7 +25,7 @@ abstract class Facade
      * @param string $name
      * @param array $args
      * @return mixed
-     * @throws \ReflectionException
+     * @throws \ReflectionException|\NotFoundException
      */
     public static function __callStatic(string $name, array $args)
     {
