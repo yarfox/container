@@ -7,7 +7,7 @@
  * @created_at  2021/8/22 4:12 下午
  */
 
-namespace Anhoder\Container\Exception;
+namespace Yarfox\Container\Exception;
 
 use Psr\Container\ContainerExceptionInterface;
 use RuntimeException;

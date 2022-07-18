@@ -1,5 +1,5 @@
 {
-    "name": "anhoder/container",
+    "name": "yarfox/container",
     "description": "psr-11 container",
     "type": "library",
     "require": {
@@ -11,17 +11,17 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Anhoder\\Container\\": "src/"
+            "Yarfox\\Container\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Anhoder\\Container\\Test\\": "tests/"
+            "Yarfox\\Container\\Test\\": "tests/"
         }
     },
     "authors": [
         {
-            "name": "anhoder",
+            "name": "yarfox",
             "email": "anhoder@88.cn"
         }
     ]

@@ -6,13 +6,14 @@
  * @created_at  2021/8/22 4:11 下午
  */
 
-namespace Anhoder\Container;
+namespace Yarfox\Container;
 
-use Anhoder\Container\Constant\Constant;
-use Anhoder\Container\Contract\ContainerInterface;
-use Anhoder\Container\Exception\ContainerException;
+use NotFoundException;
+use Yarfox\Container\Constant\Constant;
+use Yarfox\Container\Contract\ContainerInterface;
+use Yarfox\Container\Exception\ContainerException;
 use ReflectionClass;
-use Psr\Container\ContainerInterface as OsrContainerInterface;
+use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 class Container implements ContainerInterface
 {
@@ -54,8 +55,7 @@ class Container implements ContainerInterface
     {
         if (!isset(static::$instance)) {
             static::$instance = new Container();
-            static::$instance->registerInstance(ContainerInterface::class, static::$instance);
-            static::$instance->registerInstance(OsrContainerInterface::class, static::$instance);
+            static::$instance->reset();
         }
 
         return static::$instance;
@@ -66,7 +66,7 @@ class Container implements ContainerInterface
      * @param mixed $producer
      * @param string $scope
      */
-    public function registerProducer(string $key, mixed $producer, string $scope = Constant::SCOPE_PROTOTYPE)
+    public function registerProducer(string $key, mixed $producer, string $scope = Constant::SCOPE_PROTOTYPE): void
     {
         if (!$producer) return;
         $this->producers[$key] = $producer;
@@ -78,7 +78,7 @@ class Container implements ContainerInterface
      * @param string $key
      * @param mixed $producer
      */
-    public function registerSingletonProducer(string $key, mixed $producer)
+    public function registerSingletonProducer(string $key, mixed $producer): void
     {
         $this->registerProducer($key, $producer, Constant::SCOPE_SINGLETON);
     }
@@ -96,17 +96,19 @@ class Container implements ContainerInterface
      * @param string $key
      * @param object $instance
      */
-    public function registerInstance(string $key, object $instance)
+    public function registerInstance(string $key, object $instance): void
     {
         $this->instances[$key] = $instance;
     }
 
     /**
      * @param string $key
+     * @param bool $throwException
      * @return mixed
+     * @throws \NotFoundException
      * @throws \ReflectionException
      */
-    public function getInstance(string $key): mixed
+    public function getInstance(string $key, bool $throwException = false): mixed
     {
         if (isset($this->instances[$key]))
             return $this->instances[$key];
@@ -116,13 +118,17 @@ class Container implements ContainerInterface
             $this->registerInstance($key, $instance);
         }
 
+        if (!$instance && $throwException) {
+            throw new NotFoundException();
+        }
+
         return $instance;
     }
 
     /**
      * @param string $key
      * @return mixed
-     * @throws \ReflectionException
+     * @throws \ReflectionException|NotFoundException
      */
     public function resolve(string $key): mixed
     {
@@ -162,7 +168,7 @@ class Container implements ContainerInterface
     /**
      * @param string $class
      * @return mixed
-     * @throws \ReflectionException
+     * @throws \ReflectionException|NotFoundException
      */
     public function resolveClass(string $class): mixed
     {
@@ -210,7 +216,7 @@ class Container implements ContainerInterface
     /**
      * @param array $configs
      */
-    public function registerConfigs(array $configs)
+    public function registerConfigs(array $configs): void
     {
         $this->configs = $configs;
     }
@@ -227,7 +233,7 @@ class Container implements ContainerInterface
      * @param string $key
      * @param mixed $value
      */
-    public function registerConfig(string $key, mixed $value)
+    public function registerConfig(string $key, mixed $value): void
     {
         $keys = explode('.', $key);
         $existsKeys = [];
@@ -277,12 +283,24 @@ class Container implements ContainerInterface
         return $config;
     }
 
+    public function reset(): void
+    {
+        $container = static::$instance;
+        $container->instances = [];
+        $container->producers = [];
+        $container->singletons = [];
+        $container->configs = [];
+
+        $container->registerInstance(ContainerInterface::class, static::$instance);
+        $container->registerInstance(PsrContainerInterface::class, static::$instance);
+    }
+
     /**
      * @param string $id
      * @return object|null
-     * @throws \ReflectionException
+     * @throws \ReflectionException|NotFoundException
      */
-    public function get(string $id)
+    public function get(string $id): ?object
     {
         return $this->getInstance($id);
     }
@@ -290,7 +308,7 @@ class Container implements ContainerInterface
     /**
      * @param string $id
      * @return bool
-     * @throws \ReflectionException
+     * @throws \ReflectionException|NotFoundException
      */
     public function has(string $id): bool
     {

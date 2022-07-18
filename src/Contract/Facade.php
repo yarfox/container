@@ -6,9 +6,9 @@
  * @created_at  2021/8/22 8:19 下午
  */
 
-namespace Anhoder\Container\Contract;
+namespace Yarfox\Container\Contract;
 
-use Anhoder\Container\Container;
+use Yarfox\Container\Container;
 use RuntimeException;
 
 /**
@@ -19,7 +19,7 @@ abstract class Facade
     /**
      * @var object|null
      */
-    private static $processor = null;
+    private static ?object $processor = null;
 
     /**
      * @param string $name

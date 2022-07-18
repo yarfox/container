@@ -6,9 +6,9 @@
  * @created_at  2021/8/22 4:22 下午
  */
 
-namespace Anhoder\Container\Contract;
+namespace Yarfox\Container\Contract;
 
-use Anhoder\Container\Constant\Constant;
+use Yarfox\Container\Constant\Constant;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 /**
@@ -23,14 +23,14 @@ interface ContainerInterface extends PsrContainerInterface
      * @param string $scope
      * @return void
      */
-    public function registerProducer(string $key, mixed $producer, string $scope = Constant::SCOPE_PROTOTYPE);
+    public function registerProducer(string $key, mixed $producer, string $scope = Constant::SCOPE_PROTOTYPE): void;
 
     /**
      * @param string $key
      * @param mixed $producer
      * @return void
      */
-    public function registerSingletonProducer(string $key, mixed $producer);
+    public function registerSingletonProducer(string $key, mixed $producer): void;
 
     /**
      * get producer.
@@ -45,7 +45,7 @@ interface ContainerInterface extends PsrContainerInterface
      * @param object $instance
      * @return void
      */
-    public function registerInstance(string $key, object $instance);
+    public function registerInstance(string $key, object $instance): void;
 
     /**
      * get instance.
@@ -71,7 +71,7 @@ interface ContainerInterface extends PsrContainerInterface
      * @param array $configs
      * @return void
      */
-    public function registerConfigs(array $configs);
+    public function registerConfigs(array $configs): void;
 
     /**
      * get all configs.
@@ -85,7 +85,7 @@ interface ContainerInterface extends PsrContainerInterface
      * @param mixed $value
      * @return void
      */
-    public function registerConfig(string $key, mixed $value);
+    public function registerConfig(string $key, mixed $value): void;
 
     /**
      * get config.
@@ -94,4 +94,9 @@ interface ContainerInterface extends PsrContainerInterface
      * @return mixed
      */
     public function getConfig(string $key, mixed $default = null): mixed;
+
+    /**
+     * @return void
+     */
+    public function reset(): void;
 }

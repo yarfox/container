@@ -6,12 +6,12 @@
  * @created_at  2021/8/22 6:42 下午
  */
 
-namespace Anhoder\Container\Test;
+namespace Yarfox\Container\Test;
 
-use Anhoder\Container\Container;
-use Anhoder\Container\Exception\ContainerException;
+use Yarfox\Container\Container;
+use Yarfox\Container\Exception\ContainerException;
 use PHPUnit\Framework\TestCase;
-use Anhoder\Container\Facade\Container as ContainerFacade;
+use Yarfox\Container\Facade\Container as ContainerFacade;
 
 abstract class AA {}
 
@@ -38,24 +38,24 @@ class ContainerTest extends TestCase
 {
 
     /**
-     * @covers \Anhoder\Container\Container::registerInstance
-     * @covers \Anhoder\Container\Container::getInstance
+     * @covers \Yarfox\Container\Container::registerInstance
+     * @covers \Yarfox\Container\Container::getInstance
      */
     public function testRegisterInstance()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerInstance('a', new A());
         $this->assertInstanceOf(A::class, $container->getInstance('a'));
         $this->assertInstanceOf(A::class, ContainerFacade::getInstance('a'));
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerProducer
-     * @covers \Anhoder\Container\Container::resolve
+     * @covers \Yarfox\Container\Container::registerProducer
+     * @covers \Yarfox\Container\Container::resolve
      */
     public function testResolve()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerProducer('a', function () {
             return new A();
         });
@@ -70,25 +70,25 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @covers \Anhoder\Container\Container::resolveClass
-     * @covers \Anhoder\Container\Container::registerInstance
-     * @covers \Anhoder\Container\Container::resolve
+     * @covers \Yarfox\Container\Container::resolveClass
+     * @covers \Yarfox\Container\Container::registerInstance
+     * @covers \Yarfox\Container\Container::resolve
      */
     public function testResolveClass()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerInstance(AA::class, $container->resolveClass(AAI::class));
         $this->assertInstanceOf(D::class, $container->resolve(D::class));
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerProducer
-     * @covers \Anhoder\Container\Container::getInstance
-     * @covers \Anhoder\Container\Container::resolve
+     * @covers \Yarfox\Container\Container::registerProducer
+     * @covers \Yarfox\Container\Container::getInstance
+     * @covers \Yarfox\Container\Container::resolve
      */
     public function testRegisterProducer()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerProducer('a', function () {
             return new A();
         });
@@ -101,24 +101,25 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerConfigs
-     * @covers \Anhoder\Container\Container::getConfig
+     * @covers \Yarfox\Container\Container::registerConfigs
+     * @covers \Yarfox\Container\Container::getConfig
      */
     public function testRegisterConfigs()
     {
         $container = Container::instance();
+        $container->reset();
         $container->registerConfigs(['a' => 'b']);
         $this->assertEquals('b', $container->getConfig('a'));
         $this->assertEquals(null, $container->getConfig('b'));
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerProducer
-     * @covers \Anhoder\Container\Container::getProducer
+     * @covers \Yarfox\Container\Container::registerProducer
+     * @covers \Yarfox\Container\Container::getProducer
      */
     public function testGetProducer()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerProducer(A::class, A::class);
         $container->registerProducer('b_class', fn() => B::class);
         $this->assertEquals(A::class, $container->getProducer(A::class));
@@ -126,12 +127,12 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerConfig
-     * @covers \Anhoder\Container\Container::getConfig
+     * @covers \Yarfox\Container\Container::registerConfig
+     * @covers \Yarfox\Container\Container::getConfig
      */
     public function testRegisterConfig()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerConfig('a', 'b');
         //$container->registerConfig('b.c', null);
         $container->registerConfig('b.c.d', 'e');
@@ -141,46 +142,54 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerConfig
-     * @covers \Anhoder\Container\Container::getConfigs
+     * @covers \Yarfox\Container\Container::registerConfig
+     * @covers \Yarfox\Container\Container::getConfigs
      */
     public function testRegisterSingletonProducer()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerSingletonProducer('b_class', fn() => new B(new A()));
         $this->assertEquals(spl_object_hash($container->getInstance('b_class')), spl_object_hash($container->getInstance('b_class')));
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerConfig
-     * @covers \Anhoder\Container\Container::getConfigs
+     * @covers \Yarfox\Container\Container::registerConfig
+     * @covers \Yarfox\Container\Container::getConfigs
      */
     public function testGetConfigs()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerConfig('a', 'b');
         $this->assertEquals(['a' => 'b'], $container->getConfigs());
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerProducer
-     * @covers \Anhoder\Container\Container::get
+     * @covers \Yarfox\Container\Container::registerProducer
+     * @covers \Yarfox\Container\Container::get
      */
     public function testGet()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerProducer('a_class', A::class);
         $this->assertInstanceOf(A::class, $container->get('a_class'));
     }
 
     /**
-     * @covers \Anhoder\Container\Container::registerProducer
-     * @covers \Anhoder\Container\Container::has
+     * @covers \Yarfox\Container\Container::registerProducer
+     * @covers \Yarfox\Container\Container::has
      */
     public function testHas()
     {
-        $container = Container::instance();
+        $container = $this->newContainer();
         $container->registerProducer('a_class', A::class);
         $this->assertTrue($container->has('a_class'));
+    }
+
+    public function newContainer(): Container
+    {
+        $container = Container::instance();
+        $container->reset();
+
+        return $container;
     }
 }
