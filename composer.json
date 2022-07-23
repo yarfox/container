@@ -3,7 +3,8 @@
     "description": "psr-11 container",
     "type": "library",
     "require": {
-        "psr/container": "^2.0"
+        "psr/container": "^2.0",
+        "yarfox/utils": "^0.1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5"

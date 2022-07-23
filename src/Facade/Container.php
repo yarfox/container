@@ -9,8 +9,8 @@
 namespace Yarfox\Container\Facade;
 
 use Yarfox\Container\Constant\Constant;
-use Yarfox\Container\Contract\Facade;
 use Yarfox\Container\Container as RealContainer;
+use Yarfox\Utils\Facade\AbstractFacade;
 
 /**
  * @method static void registerProducer(string $key, mixed $producer, string $scope = Constant::SCOPE_PROTOTYPE)
@@ -27,9 +27,10 @@ use Yarfox\Container\Container as RealContainer;
  * @method static mixed getConfig(string $key, mixed $default = null)
  * @method static get(string $id)
  * @method static bool has(string $id)
+ * @method static RealContainer instance();
  * @see \Yarfox\Container\Container
  */
-class Container extends Facade
+class Container extends AbstractFacade
 {
     /**
      * @return RealContainer

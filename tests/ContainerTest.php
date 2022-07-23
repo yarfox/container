@@ -8,10 +8,10 @@
 
 namespace Yarfox\Container\Test;
 
-use Yarfox\Container\Container;
+use Yarfox\Container\Facade\Container;
 use Yarfox\Container\Exception\ContainerException;
 use PHPUnit\Framework\TestCase;
-use Yarfox\Container\Facade\Container as ContainerFacade;
+use Yarfox\Container\Container as RealContainer;
 
 abstract class AA {}
 
@@ -46,7 +46,7 @@ class ContainerTest extends TestCase
         $container = $this->newContainer();
         $container->registerInstance('a', new A());
         $this->assertInstanceOf(A::class, $container->getInstance('a'));
-        $this->assertInstanceOf(A::class, ContainerFacade::getInstance('a'));
+        $this->assertInstanceOf(A::class, Container::getInstance('a'));
     }
 
     /**
@@ -62,9 +62,9 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(A::class, $container->resolve('a'));
         $this->assertInstanceOf(A::class, $container->resolve(A::class));
         $this->assertInstanceOf(C::class, $container->resolve(C::class));
-        $this->assertInstanceOf(A::class, ContainerFacade::resolve('a'));
-        $this->assertInstanceOf(A::class, ContainerFacade::resolve(A::class));
-        $this->assertInstanceOf(C::class, ContainerFacade::resolve(C::class));
+        $this->assertInstanceOf(A::class, Container::resolve('a'));
+        $this->assertInstanceOf(A::class, Container::resolve(A::class));
+        $this->assertInstanceOf(C::class, Container::resolve(C::class));
         $this->expectException(ContainerException::class);
         $container->resolve(D::class);
     }
@@ -185,7 +185,7 @@ class ContainerTest extends TestCase
         $this->assertTrue($container->has('a_class'));
     }
 
-    public function newContainer(): Container
+    public function newContainer(): RealContainer
     {
         $container = Container::instance();
         $container->reset();
