@@ -185,6 +185,18 @@ class ContainerTest extends TestCase
         $this->assertTrue($container->has('a_class'));
     }
 
+    /**
+     * @covers \Yarfox\Container\Container::registerProducer
+     * @covers \Yarfox\Container\Container::getInstance
+     */
+    public function testProducer()
+    {
+        $container = $this->newContainer();
+        $container->registerProducer('test', new ExampleProducer());
+        $test = $container->getInstance('test');
+        $this->assertEquals('test', $test->test());
+    }
+
     public function newContainer(): RealContainer
     {
         $container = Container::instance();

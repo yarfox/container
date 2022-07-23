@@ -11,6 +11,7 @@ namespace Yarfox\Container;
 use NotFoundException;
 use Yarfox\Container\Constant\Constant;
 use Yarfox\Container\Contract\ContainerInterface;
+use Yarfox\Container\Contract\ProducerInterface;
 use Yarfox\Container\Exception\ContainerException;
 use ReflectionClass;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
@@ -160,6 +161,13 @@ class Container implements ContainerInterface
             }
 
             $producer = $instance;
+        } elseif ($producer instanceof ProducerInterface) {
+            $instance = $producer->produce();
+            if (!$instance) {
+                return null;
+            }
+
+            return $instance;
         }
 
         return $this->getInstance($producer);
