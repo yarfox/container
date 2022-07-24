@@ -2,6 +2,7 @@
     "name": "yarfox/container",
     "description": "psr-11 container",
     "type": "library",
+    "minimum-stability": "alpha",
     "require": {
         "psr/container": "^2.0",
         "yarfox/utils": "1.0.0-alpha"
