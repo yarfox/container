@@ -8,7 +8,7 @@
 
 namespace Yarfox\Container\Contract;
 
-use Yarfox\Container\Constant\Constant;
+use Yarfox\Container\Constant\Scope;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 /**
@@ -23,7 +23,7 @@ interface ContainerInterface extends PsrContainerInterface
      * @param string $scope
      * @return void
      */
-    public function registerProducer(string $key, mixed $producer, string $scope = Constant::SCOPE_PROTOTYPE): void;
+    public function registerProducer(string $key, mixed $producer, string $scope = Scope::SCOPE_PROTOTYPE): void;
 
     /**
      * @param string $key
@@ -31,6 +31,13 @@ interface ContainerInterface extends PsrContainerInterface
      * @return void
      */
     public function registerSingletonProducer(string $key, mixed $producer): void;
+
+    /**
+     * @param string $key
+     * @param mixed $producer
+     * @return void
+     */
+    public function registerRequestProducer(string $key, mixed $producer): void;
 
     /**
      * get producer.
@@ -43,16 +50,18 @@ interface ContainerInterface extends PsrContainerInterface
      * register instance.
      * @param string $key
      * @param object $instance
+     * @param string $scope
      * @return void
      */
-    public function registerInstance(string $key, object $instance): void;
+    public function registerInstance(string $key, object $instance, string $scope = Scope::SCOPE_GLOBAL): void;
 
     /**
      * get instance.
      * @param string $key
+     * @param bool $throwException
      * @return mixed
      */
-    public function getInstance(string $key): mixed;
+    public function getInstance(string $key, bool $throwException = false): mixed;
 
     /**
      * @param string $key
@@ -69,9 +78,10 @@ interface ContainerInterface extends PsrContainerInterface
     /**
      * register configs.
      * @param array $configs
+     * @param string $scope
      * @return void
      */
-    public function registerConfigs(array $configs): void;
+    public function registerConfigs(array $configs, string $scope = Scope::SCOPE_GLOBAL): void;
 
     /**
      * get all configs.
@@ -83,9 +93,10 @@ interface ContainerInterface extends PsrContainerInterface
      * register config.
      * @param string $key
      * @param mixed $value
+     * @param string $scope
      * @return void
      */
-    public function registerConfig(string $key, mixed $value): void;
+    public function registerConfig(string $key, mixed $value, string $scope = Scope::SCOPE_GLOBAL): void;
 
     /**
      * get config.
@@ -99,4 +110,9 @@ interface ContainerInterface extends PsrContainerInterface
      * @return void
      */
     public function reset(): void;
+
+    /**
+     * @return void
+     */
+    public function resetRequestScope(): void;
 }

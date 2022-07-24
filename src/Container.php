@@ -9,7 +9,8 @@
 namespace Yarfox\Container;
 
 use NotFoundException;
-use Yarfox\Container\Constant\Constant;
+use ReflectionException;
+use Yarfox\Container\Constant\Scope;
 use Yarfox\Container\Contract\ContainerInterface;
 use Yarfox\Container\Contract\ProducerInterface;
 use Yarfox\Container\Exception\ContainerException;
@@ -20,21 +21,25 @@ class Container implements ContainerInterface
 {
     /**
      * @var array
+     * @example [scope => []]
      */
     private array $instances;
 
     /**
      * @var array
+     * @example [scope => []]
      */
     private array $producers;
 
     /**
      * @var array
+     * @example [scope => [key => true]]
      */
-    private array $singletons;
+    private array $scopes;
 
     /**
      * @var array
+     * @example [scope => []]
      */
     private array $configs = [];
 
@@ -67,12 +72,15 @@ class Container implements ContainerInterface
      * @param mixed $producer
      * @param string $scope
      */
-    public function registerProducer(string $key, mixed $producer, string $scope = Constant::SCOPE_PROTOTYPE): void
+    public function registerProducer(string $key, mixed $producer, string $scope = Scope::SCOPE_PROTOTYPE): void
     {
-        if (!$producer) return;
-        $this->producers[$key] = $producer;
+        if (!$producer || !isset(Scope::SCOPES[$scope])) return;
 
-        $scope == Constant::SCOPE_SINGLETON && $this->singletons[$key] = true;
+        $this->producers[$scope][$key] = $producer;
+
+        if (isset(Scope::CACHEABLE_SCOPES[$scope])) {
+            $this->scopes[$scope][$key] = true;
+        }
     }
 
     /**
@@ -81,7 +89,17 @@ class Container implements ContainerInterface
      */
     public function registerSingletonProducer(string $key, mixed $producer): void
     {
-        $this->registerProducer($key, $producer, Constant::SCOPE_SINGLETON);
+        $this->registerProducer($key, $producer, Scope::SCOPE_GLOBAL);
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $producer
+     * @return void
+     */
+    public function registerRequestProducer(string $key, mixed $producer): void
+    {
+        $this->registerProducer($key, $producer, Scope::SCOPE_REQUEST);
     }
 
     /**
@@ -90,33 +108,43 @@ class Container implements ContainerInterface
      */
     public function getProducer(string $key): mixed
     {
-        return $this->producers[$key] ?? null;
+        return $this->producers[Scope::SCOPE_REQUEST][$key] ?? $this->producers[Scope::SCOPE_GLOBAL][$key] ?? $this->producers[Scope::SCOPE_PROTOTYPE][$key] ?? null;
     }
 
     /**
      * @param string $key
      * @param object $instance
+     * @param string $scope
      */
-    public function registerInstance(string $key, object $instance): void
+    public function registerInstance(string $key, object $instance, string $scope = Scope::SCOPE_GLOBAL): void
     {
-        $this->instances[$key] = $instance;
+        if (!isset(Scope::CACHEABLE_SCOPES[$scope])) return;
+
+        $this->instances[$scope][$key] = $instance;
     }
 
     /**
      * @param string $key
      * @param bool $throwException
      * @return mixed
-     * @throws \NotFoundException
-     * @throws \ReflectionException
+     * @throws NotFoundException|ReflectionException
      */
     public function getInstance(string $key, bool $throwException = false): mixed
     {
-        if (isset($this->instances[$key]))
-            return $this->instances[$key];
+        $instance = $this->instances[Scope::SCOPE_REQUEST][$key] ?? $this->instances[Scope::SCOPE_GLOBAL][$key] ?? null;
+        if ($instance) {
+            return $instance;
+        }
+
+        $scope = match (true) {
+            isset($this->scopes[Scope::SCOPE_REQUEST]) => Scope::SCOPE_REQUEST,
+            isset($this->scopes[Scope::SCOPE_GLOBAL]) => Scope::SCOPE_GLOBAL,
+            default => Scope::SCOPE_PROTOTYPE,
+        };
 
         $instance = $this->resolve($key);
-        if ($instance && isset($this->singletons[$key]) && $this->singletons[$key]) {
-            $this->registerInstance($key, $instance);
+        if ($instance && isset(Scope::CACHEABLE_SCOPES[$scope])) {
+            $this->registerInstance($key, $instance, $scope);
         }
 
         if (!$instance && $throwException) {
@@ -129,7 +157,8 @@ class Container implements ContainerInterface
     /**
      * @param string $key
      * @return mixed
-     * @throws \ReflectionException|NotFoundException
+     * @throws \NotFoundException
+     * @throws \ReflectionException
      */
     public function resolve(string $key): mixed
     {
@@ -143,7 +172,7 @@ class Container implements ContainerInterface
             if ($instance) {
                 return $instance;
             }
-            throw new ContainerException("The {$key} producer is itself!");
+            throw new ContainerException("The $key producer is itself!");
         }
 
         if (is_callable($producer)) {
@@ -153,7 +182,7 @@ class Container implements ContainerInterface
             }
 
             if ($instance == $key) {
-                throw new ContainerException("The {$key} producer return itself!");
+                throw new ContainerException("The $key producer return itself!");
             }
 
             if (is_object($instance)) {
@@ -176,7 +205,7 @@ class Container implements ContainerInterface
     /**
      * @param string $class
      * @return mixed
-     * @throws \ReflectionException|NotFoundException
+     * @throws ReflectionException|NotFoundException
      */
     public function resolveClass(string $class): mixed
     {
@@ -185,7 +214,7 @@ class Container implements ContainerInterface
         }
         $reflectionClass = new ReflectionClass($class);
         if (!$reflectionClass->isInstantiable()) {
-            throw new ContainerException("Class {$class} is not instantiable!");
+            throw new ContainerException("Class $class is not instantiable!");
         }
         $constructor = $reflectionClass->getConstructor();
         if (!$constructor) {
@@ -204,7 +233,7 @@ class Container implements ContainerInterface
             }
 
             if ($type->getName() == $class) {
-                throw new ContainerException("Class {$class} depend on itself!");
+                throw new ContainerException("Class $class depend on itself!");
             }
 
             $instance = $this->getInstance($type->getName());
@@ -223,10 +252,13 @@ class Container implements ContainerInterface
 
     /**
      * @param array $configs
+     * @param string $scope
      */
-    public function registerConfigs(array $configs): void
+    public function registerConfigs(array $configs, string $scope = Scope::SCOPE_GLOBAL): void
     {
-        $this->configs = $configs;
+        if (!isset(Scope::CACHEABLE_SCOPES[$scope])) return;
+
+        $this->configs[$scope] = $configs;
     }
 
     /**
@@ -234,23 +266,30 @@ class Container implements ContainerInterface
      */
     public function getConfigs(): array
     {
-        return $this->configs;
+        return array_replace_recursive($this->configs[Scope::SCOPE_GLOBAL] ?? [], $this->configs[Scope::SCOPE_REQUEST] ?? []);
     }
 
     /**
      * @param string $key
      * @param mixed $value
+     * @param string $scope
      */
-    public function registerConfig(string $key, mixed $value): void
+    public function registerConfig(string $key, mixed $value, string $scope = Scope::SCOPE_GLOBAL): void
     {
         $keys = explode('.', $key);
         $existsKeys = [];
-        $config = &$this->configs;
+
+        $config = [];
+        if (isset(Scope::CACHEABLE_SCOPES[$scope])) {
+            $this->configs[$scope] = $this->configs[$scope] ?? [];
+            $config = &$this->configs[$scope];
+        }
+
         foreach ($keys as $key) {
 
             if (!is_array($config)) {
                 $key = implode('.', $existsKeys);
-                throw new ContainerException("Config key({$key}) already exists!");
+                throw new ContainerException("Config key($key) already exists!");
             }
 
             if (array_key_exists($key, $config)) {
@@ -258,7 +297,7 @@ class Container implements ContainerInterface
 
                 if (is_null($config[$key])) {
                     $key = implode('.', $existsKeys);
-                    throw new ContainerException("Config key({$key}) already exists!");
+                    throw new ContainerException("Config key($key) already exists!");
                 }
             } else {
                 $config[$key] = [];
@@ -278,29 +317,48 @@ class Container implements ContainerInterface
     public function getConfig(string $key, mixed $default = null): mixed
     {
         $keys = explode('.', $key);
-        $config = $this->configs;
+        $globalConfigs = $this->configs[Scope::SCOPE_GLOBAL] ?? [];
+        $requestConfigs = $this->configs[Scope::SCOPE_REQUEST] ?? [];
+        $configs = array_replace_recursive($globalConfigs, $requestConfigs);
 
         foreach ($keys as $key) {
-            if (!isset($config[$key])) {
+            if (!isset($configs[$key])) {
                 return $default;
             }
 
-            $config = $config[$key];
+            $configs = $configs[$key];
         }
 
-        return $config;
+        return $configs;
     }
 
+    /**
+     * @return void
+     */
     public function reset(): void
     {
         $container = static::$instance;
         $container->instances = [];
         $container->producers = [];
-        $container->singletons = [];
+        $container->scopes = [];
         $container->configs = [];
 
         $container->registerInstance(ContainerInterface::class, static::$instance);
         $container->registerInstance(PsrContainerInterface::class, static::$instance);
+    }
+
+    /**
+     * @return void
+     */
+    public function resetRequestScope(): void
+    {
+        $container = static::$instance;
+        unset(
+            $container->instances[Scope::SCOPE_REQUEST],
+            $container->producers[Scope::SCOPE_REQUEST],
+            $container->scopes[Scope::SCOPE_REQUEST],
+            $container->configs[Scope::SCOPE_REQUEST],
+        );
     }
 
     /**
